@@ -7,6 +7,7 @@
 
 terraform*
 terraform_rsa.pub
+.terraform*
 
 # Crash log files
 crash.log

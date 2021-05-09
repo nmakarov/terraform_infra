@@ -18,7 +18,7 @@
 #     public_key = file("files/terraform_rsa.pub")
 # }
 
-resource "aws_instance" "mlsfarmStorefront" {
+resource "aws_instance" "mlsfarm-storefront" {
     ami = data.aws_ami.ubuntu.id
     instance_type = "t2.micro"
     key_name = aws_key_pair.mlsfarm.key_name
@@ -46,14 +46,14 @@ resource "aws_instance" "mlsfarmStorefront" {
     depends_on = [aws_efs_mount_target.mlsfarm]
 
     tags = {
-        Name = var.namespace
+        Name = "${var.namespace}-storefront"
     }
 }
 
-resource "aws_route53_record" "mlsfarm-Storefront" {
+resource "aws_route53_record" "mlsfarm-storefront" {
     zone_id = "Z09475982WUANOHRLKQJP"
     name    = "storefront.${var.tld}"
     type    = "A"
     ttl     = "60"
-    records = [aws_instance.mlsfarmStorefront.public_ip]
+    records = [aws_instance.mlsfarm-storefront.public_ip]
 }

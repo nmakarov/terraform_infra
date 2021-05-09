@@ -18,7 +18,7 @@ resource "aws_key_pair" "mlsfarm" {
     public_key = file("files/${var.rsa_key}.pub")
 }
 
-resource "aws_instance" "mlsfarm" {
+resource "aws_instance" "mlsfarm-ec2" {
     ami = data.aws_ami.ubuntu.id
     instance_type = "t2.micro"
     key_name = aws_key_pair.mlsfarm.key_name
@@ -37,16 +37,26 @@ resource "aws_instance" "mlsfarm" {
         user = "ubuntu"
         private_key = file("~/.ssh/${var.rsa_key}")
     }
+    provisioner "file" {
+        source = "files/update.sh"
+        destination = "/tmp/update.sh"
+    }
     provisioner "remote-exec" {
-        scripts = [
-            "files/update.sh"
+        inline = [
+            "chmod +x /tmp/update.sh",
+            "/tmp/update.sh ${aws_efs_file_system.mlsfarm.dns_name}"
         ]
     }
+    # provisioner "remote-exec" {
+    #     scripts = [
+    #         "files/update.sh"
+    #     ]
+    # }
 
     depends_on = [aws_efs_mount_target.mlsfarm]
 
     tags = {
-        Name = var.namespace
+        Name = "${var.namespace}-ec2"
     }
 }
 
@@ -55,5 +65,5 @@ resource "aws_route53_record" "mlsfarm-ec2" {
     name    = "ec2.${var.tld}"
     type    = "A"
     ttl     = "60"
-    records = [aws_instance.mlsfarm.public_ip]
+    records = [aws_instance.mlsfarm-ec2.public_ip]
 }
